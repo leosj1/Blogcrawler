@@ -1,0 +1,16 @@
+setup.py
+BlogCrawler/__init__.py
+BlogCrawler/items.py
+BlogCrawler/middlewares.py
+BlogCrawler/pipelines.py
+BlogCrawler/runner.py
+BlogCrawler/settings.py
+BlogCrawler/utils.py
+BlogCrawler/spiders/__init__.py
+BlogCrawler/spiders/buzzfeednews.py
+BlogCrawler/spiders/zerohedge.py
+project.egg-info/PKG-INFO
+project.egg-info/SOURCES.txt
+project.egg-info/dependency_links.txt
+project.egg-info/entry_points.txt
+project.egg-info/top_level.txt

@@ -1,0 +1,16 @@
+CREATE TABLE `blogs`.`stats` (
+  `daily_id` BIGINT NOT NULL AUTO_INCREMENT,
+  `domain` VARCHAR(64) NOT NULL,
+  `url` VARCHAR(512) NOT NULL,
+  `views` BIGINT NULL DEFAULT NULL,
+  `daily_views` BIGINT NULL DEFAULT NULL,
+  `likes` BIGINT NULL DEFAULT NULL,
+  `daily_likes` BIGINT NULL DEFAULT NULL,
+  `comments` BIGINT NULL DEFAULT NULL,
+  `daily_comments` BIGINT NULL DEFAULT NULL,
+  `crawled_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+  PRIMARY KEY (`daily_id`),
+  INDEX `URLS` (`url` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;

@@ -1,0 +1,8 @@
+{
+    "python.pythonPath": "C:\\Users\\seun\\anaconda3\\python.exe",
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylamaEnabled": false,
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": false,
+    "python.formatting.provider": "autopep8"
+}
