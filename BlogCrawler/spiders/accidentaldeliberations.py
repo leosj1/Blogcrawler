@@ -4,7 +4,7 @@ import scrapy
 from dateutil.parser import parse
 
 from BlogCrawler.items import Posts, Stats, Comments
-from BlogCrawler.utils import get_links, get_start_urls, get_matching_links
+from BlogCrawler.utils import get_links, get_start_urls, get_matching_links, tags_to_json
 
 
 class AccidentaldeliberationsSpider(scrapy.Spider):
@@ -13,19 +13,21 @@ class AccidentaldeliberationsSpider(scrapy.Spider):
     allowed_domains = ['accidentaldeliberations.blogspot.com']
     db_urls = get_start_urls(domain)
     start_urls = ['http://accidentaldeliberations.blogspot.com//'] + db_urls
+    # user_agent = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    download_delay = 5
 
     def parse(self, response):
         #Running db urls
         if response.url in self.db_urls:
-            yield scrapy.Request(response.url, self.parse_blog, headers = {"User-Agent":"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"})
+            yield scrapy.Request(response.url, self.parse_blog)
         else: #Scrapying from site
             links = response.xpath("//h3[contains(@class, 'post-title entry-title')]/a/@href").getall()
             for link in links:
-                yield scrapy.Request(link, self.parse_blog, headers = {"User-Agent":"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"})
+                yield scrapy.Request(link, self.parse_blog)
             #Getting blog archive links
             archive_links = response.xpath("//a[contains(@class, 'post-count-link')]/@href").getall()
             for archive in archive_links:
-                yield scrapy.Request(archive, self.parse, headers = {"User-Agent":"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"})
+                yield scrapy.Request(archive, self.parse)
 
 
     def parse_blog(self, response):
@@ -38,7 +40,8 @@ class AccidentaldeliberationsSpider(scrapy.Spider):
         blog['content'] = " ".join(response.xpath("//div[contains(@class, 'post-body entry-content')]//text()").getall()).replace('\n', '')
         blog['content_html'] = response.xpath("//div[contains(@class, 'post-body entry-content')]").get()
         blog['links'] = get_links(response.xpath("//div[contains(@class, 'post-body entry-content')]").get())
-        blog['tags'] = None
+        tags = response.xpath('//*[contains(@id, "Blog1")]/div[1]/div/div/div/div[1]/div[3]/div[2]/span//text()').getall()
+        blog['tags'] = tags_to_json(list(filter(lambda a: a != ',\n' and a != '\n' and 'Labels:' not in a, tags)))
         yield blog
 
         #Stats
@@ -52,7 +55,6 @@ class AccidentaldeliberationsSpider(scrapy.Spider):
             stat['comments'] = int(re.search(r'\d+', comment_num).group())
         else: 
             stat['comments'] = None
-            
         yield stat
 
         #Comments

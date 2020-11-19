@@ -29,7 +29,7 @@ class ZerohedgeSpider(scrapy.Spider):
 
     def parse_blog(self, response):
         #HTML Content
-        blog_id = response.xpath('/html/head/link[4]/@href').get().strip('/node/')
+        blog_id = response.xpath('/html/head/link[@rel="shortlink"]/@href').get()
         blog = Posts()
         blog['domain'] = self.domain
         blog['url'] = response.url
@@ -82,8 +82,12 @@ def process_comment(data, blog_url, parent_comment=None):
         c['domain'] = 'zerohedge.com'
         c['url'] = blog_url
         c['comment_id'] = comment['id']
-        c['username'] = comment['user']['username']
-        c['user_id'] = comment['user']['id']
+        if comment['user']: 
+            c['username'] = comment['user']['username']
+            c['user_id'] = comment['user']['id']
+        else: 
+            c['username'] = None
+            c['user_id'] = None            
         c['comment'] = comment['body']
         c['comment_original'] = comment['richTextBody']
         c['links'] = get_links(comment['richTextBody'])

@@ -5,6 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 import pymysql
+import time
 
 from BlogCrawler.items import Posts, Stats, Comments
 
@@ -66,13 +67,22 @@ class DbPipeline(object):
 #SQL Functions
 
 def get_connection():
-    connection = pymysql.connect(host='localhost',
-                                user='scrapy',
-                                password='Cosmos1',
-                                db='blogs',
-                                charset='utf8mb4',
-                                use_unicode=True,
-                                cursorclass=pymysql.cursors.DictCursor)
+    count = 0
+    while True:
+        try:
+            connection = pymysql.connect(host='localhost',
+									user='scrapy',
+									password='Cosmos1',
+									db='blogs',
+									charset='utf8mb4',
+									use_unicode=True,
+									cursorclass=pymysql.cursors.DictCursor)
+            break
+        except (pymysql.err.OperationalError, OSError) as e:
+            #Too many connections, sleeping and trying again
+            count += 1
+            time.sleep(2)
+            if count > 5: raise Exception(f"Trouble getting connection {e}")
     return connection
 
 def commit_to_db(query, data):

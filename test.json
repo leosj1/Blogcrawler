@@ -1,0 +1,32 @@
+[
+    {
+        "entity": "Tito",
+        "narrative": "one exchange featured Tito imploring Stalin.",
+        "blogpost_id": 1,
+        "blogsite_id": 1
+    },
+    {
+        "entity": "West",
+        "narrative": "the West looked elsewhere was testament to the paucity of this circumstance.",
+        "blogpost_id": 1,
+        "blogsite_id": 1
+    },
+    {
+        "entity": "Soviet",
+        "narrative": "economy decimated by a Soviet embargo.",
+        "blogpost_id": 1,
+        "blogsite_id": 1
+    },
+    {
+        "entity": "Crimean",
+        "narrative": "the Crimean crisis heralds a new era of international relations.",
+        "blogpost_id": 1,
+        "blogsite_id": 1
+    },
+    {
+        "entity": "Western",
+        "narrative": "economy kept afloat by generous Western loans.",
+        "blogpost_id": 1,
+        "blogsite_id": 1
+    }
+]

@@ -1,0 +1,48 @@
+[
+    {
+        "entity": "Tito",
+        "data": [
+            {
+                "narrative": "one exchange featured Tito imploring Stalin.",
+                "blogpost_ids": [
+                    1,
+                    6,
+                    20,
+                    5
+                ]
+            },
+            {
+                "narrative": "Tito is a boy and he is ready.",
+                "blogpost_ids": [
+                    6,
+                    2,
+                    4,
+                    10056
+                ]
+            }
+        ]
+    },
+    {
+        "entity": "Soviet",
+        "data": [
+            {
+                "narrative": "economy decimated by a Soviet embargo.",
+                "blogpost_ids": [
+                    1,
+                    10,
+                    40,
+                    5
+                ]
+            },
+            {
+                "narrative": "Soviet embargo is bad.",
+                "blogpost_ids": [
+                    62,
+                    23,
+                    47,
+                    189
+                ]
+            }
+        ]
+    }
+]

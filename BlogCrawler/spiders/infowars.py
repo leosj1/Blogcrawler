@@ -13,61 +13,41 @@ class InfowarsSpider(scrapy.Spider):
     name = 'infowars'
     domain = 'infowars.com'
     allowed_domains = ['infowars.com']
-    depth = 1000
-    home_pages = ['https://www.infowars.com/home-page-featured/', 'https://www.infowars.com/breaking-news/', 'https://www.infowars.com/category/featured-stories/',
-     'https://www.infowars.com/category/special-reports/', 'https://www.infowars.com/category/us-news/', 'https://www.infowars.com/category/world-news/',
-     'https://www.infowars.com/category/economy/', 'https://www.infowars.com/category/government/', 'https://www.infowars.com/category/world-at-war/', 
-     'https://www.infowars.com/category/health/', 'https://www.infowars.com/category/science-technology/', 'https://www.infowars.com/category/globalism/',
-     'https://www.infowars.com/category/hot-news/']
+    home_pages = ['https://www.infowars.com/category/8/', 'https://www.infowars.com/category/5/', 'https://www.infowars.com/category/2/',
+     'https://www.infowars.com/category/18/', 'https://www.infowars.com/category/10/', 'https://www.infowars.com/category/3/',
+     'https://www.infowars.com/category/11/', 'https://www.infowars.com/category/14/', 'https://www.infowars.com/category/4/']
     start_urls = home_pages + get_start_urls(domain)
 
     def parse(self, response):
+        return
         #Parsing home pages
         if any(x for x in self.home_pages if x in response.url):
             #Getting articles from page
-            articles = response.xpath('//div[contains(@class, "article-content")]/h3/a/@href').getall()
-            articles = articles if articles else response.xpath('//div[contains(@class, "articles-list")]/article/a/@href').getall()
-            for blog_url in response.xpath('//div[contains(@class, "article-content")]/h3/a/@href').getall():
-                yield scrapy.Request(blog_url, self.parse_blog, meta={'dont_redirect': True})
-            
-            #pagination
-            next_url = ""
-            if 'https://www.infowars.com/home-page-featured/' in response.url:
-                if response.url == 'https://www.infowars.com/home-page-featured/':
-                    page_num = 0 
-                else: 
-                    page_num = int(response.url.replace('https://www.infowars.com/home-page-featured/?id=', ''))
-                if page_num <= self.depth: 
-                    next_url = f"https://www.infowars.com/home-page-featured/?id={page_num+1}"
-            elif '/page/' not in response.url:
-                next_url = response.url + 'page/2'
-            elif '/page/' in response.url:
-                page_num = int(response.url.replace('/', '').split('page')[-1])
-                if page_num <= self.depth: 
-                    next_url = response.url.split('/page/')[0] + f"/page/{page_num+1}"
-            if next_url: 
-                yield scrapy.Request(next_url, self.parse)
-            else: 
-                print("--- Finished {} ---".format(response.url))
-        
+            for blog_url in response.xpath('//a[contains(@class, "css-1xjmleq")]/@href').getall():
+                yield scrapy.Request('https://www.infowars.com' + blog_url, self.parse_blog,
+                    meta={'dont_redirect': True}, headers={'accept':"text/html", "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36"})
         #Processsing articles in db
         else:
-            yield scrapy.Request(response.url, self.parse_blog, meta={'dont_redirect': True})
+            yield scrapy.Request(response.url, self.parse_blog,
+                meta={'dont_redirect': True}, headers={'accept':"text/html", "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36"})
 
 
     def parse_blog(self, response):
         url = unquote(response.url)
         blog = Posts()
-        blog['domain'] = self.domain
-        blog['url'] = url
-        blog['title'] = response.xpath('//h1[contains(@class, "entry-title")]/text()').get()
-        blog['author'] = get_author(response.xpath('//*[contains(@class, "author")]//text()').getall(), response.xpath('//*[contains(@class, "text")]/article/p//text()').getall())
-        blog['published_date']= parse(response.xpath('//*[contains(@class, "date")]/text()').get())
-        blog['content'] = " ".join(response.xpath('//*[contains(@class, "text")]/article/p//text()').getall()).strip().replace('\n','')
-        blog['content_html'] = response.xpath('//*[contains(@class, "text")]/article').get()
-        blog['links'] = get_links(response.xpath('//*[contains(@class, "text")]/article').get())
-        blog['tags'] = None
-        yield blog
+        try:
+            blog['domain'] = self.domain
+            blog['url'] = url
+            blog['title'] = response.xpath('//h1[contains(@class, "css-1ln1egd")]/text()').get()
+            blog['author'] = get_author(response)
+            blog['published_date']= parse(response.xpath('//*[contains(@class, "css-1fboxhy")]/a/text()').get())
+            blog['content'] = " ".join(response.xpath('//*[contains(@class, "css-118w07p")]/p//text()').getall()).strip().replace('\n','')
+            blog['content_html'] = response.xpath('//*[contains(@class, "css-118w07p")]').get()
+            blog['links'] = get_links(response.xpath('//*[contains(@class, "css-118w07p")]').get())
+            blog['tags'] = None
+            if blog['title']: yield blog
+        except Exception as e:
+            print(":here")
 
         #Stats
         stat = Stats()
@@ -99,18 +79,26 @@ class InfowarsSpider(scrapy.Spider):
                 parsed_comment['reply_to'] = comments['replies'][parsed_comment['comment_id']] if  parsed_comment['comment_id'] in comments['replies'] else None
                 yield parsed_comment
 
+def get_views(post_id):
+    url = "https://api.infowars.com/graphql" 
+    headers = {"Content-Type": "application/json; charset=UTF-8"}
+    body = {"query":"mutation IncreaseViewCountMutation($postId:Int){increaseViewCount(input:{clientMutationId:\"viewCount\",isViewed:1,postId:$postId}){viewCount clientMutationId}}", 
+            "variables":{"postId":post_id}}
+    r = requests.post(url, json=body, headers=headers)
+    d = r.json()
+    return d['data']['increaseViewCount']['viewCount']
 
-def get_author(possible_names, second_loc):
-    for possible_name in possible_names:
-        for split_name in possible_name.split('|'):
-            name = split_name.strip().replace('-','').strip()
-            if name: 
-                return name
-    for possible_name in second_loc:
-        for split_name in possible_name.split('\n'):
-            name = split_name.strip().replace('-','').strip()
-            if len(name) < 35 and name: 
-                return name
+def get_author(response):
+    author_lst = [x for x in response.xpath('//*[contains(@class, "css-kl31lu")]//a/text()').getall() if "by " not in x]
+    if len(author_lst) > 1:
+        author = author_lst[0] 
+    elif [x for x in response.xpath('//*[contains(@class, "css-kl31lu")]/a/u/text()').getall() if x.strip()]:
+        author = [x for x in response.xpath('//*[contains(@class, "css-kl31lu")]/a/u/text()').getall() if x.strip()][0]
+    else:
+        author = response.xpath('//*[contains(@class, "css-kl31lu")]/div/text()').get()
+    if not author:
+        print("asdfsdf")
+    return author
 
 def get_comments(blog_url):
     #Data Format
